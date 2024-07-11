@@ -19,8 +19,8 @@
 #define CHANNEL_DEFAULT_RESUME_TRIES 5
 #define CHANNEL_DEFAULT_RESUME_DELAY 5
 typedef struct channel channel_t;
-struct channel {
-	channel_op_res_t (*open)(channel_t *this, void *cfg);
+struct channel { // 网络通道/频道接口
+	channel_op_res_t (*open)(channel_t *this, void *cfg); // 
 	channel_op_res_t (*close)(channel_t *this);
 	channel_op_res_t (*get)(channel_t *this, void *data);
 	channel_op_res_t (*get_file)(channel_t *this, void *data);

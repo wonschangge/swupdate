@@ -213,6 +213,12 @@ static bool is_oldstyle_version(const char *version_string, __u64 *version_numbe
  * - if neither works, we fallback to lexicographical comparison
  *
  * Returns -1, 0 or 1 of left is respectively lower than, equal to or greater than right.
+ * 
+ * 支持以下类型:
+ * 	老风格: 主版本.小版本.revision.构建信息
+ *  新语义: 主版本.小版本.补丁[-预发布][+构建信息]
+ *  亦或: 字典序比较
+ * 	
  */
 int compare_versions(const char* left_version, const char* right_version)
 {

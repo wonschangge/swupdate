@@ -35,7 +35,7 @@
 #define HWID_REGEXP_PREFIX	"#RE:"
 #define SWUPDATE_ALIGN(A,S)    (((A) + (S) - 1) & ~((S) - 1))
 
-#define BOOTVAR_TRANSACTION "recovery_status"
+#define BOOTVAR_TRANSACTION "recovery_status" // recovery_status U-Boot环境变量
 
 struct img_type;
 struct imglist;
@@ -44,17 +44,17 @@ struct hw_type;
 extern int loglevel;
 extern int exit_code;
 
-typedef enum {
-	SERVER_OK,
-	SERVER_EERR,
-	SERVER_EBADMSG,
-	SERVER_EINIT,
-	SERVER_EACCES,
-	SERVER_EAGAIN,
-	SERVER_UPDATE_AVAILABLE,
-	SERVER_NO_UPDATE_AVAILABLE,
-	SERVER_UPDATE_CANCELED,
-	SERVER_ID_REQUESTED,
+typedef enum { // Suricatta远程服务器的操作结果枚举
+	SERVER_OK,						// 正常
+	SERVER_EERR,					// 错误
+	SERVER_EBADMSG,					// 错误的IPC消息
+	SERVER_EINIT,					// 错误初始化
+	SERVER_EACCES,					// 错误访问
+	SERVER_EAGAIN,					// 再来一次
+	SERVER_UPDATE_AVAILABLE,		// 有可用更新
+	SERVER_NO_UPDATE_AVAILABLE,		// 无可用更新
+	SERVER_UPDATE_CANCELED,			// 取消更新
+	SERVER_ID_REQUESTED,			// 请求ID
 } server_op_res_t;
 
 enum {
@@ -70,13 +70,13 @@ enum {
  * to inform the installer about a change in a subprocess
  */
 typedef enum {
-	OFF,
-	ERRORLEVEL,
-	WARNLEVEL,
-	INFOLEVEL,
-	TRACELEVEL,
-	DEBUGLEVEL,
-	LASTLOGLEVEL=DEBUGLEVEL
+	OFF,			// 对应 loglevel 1
+	ERRORLEVEL,		// 对应 loglevel 2
+	WARNLEVEL,		// 对应 loglevel 3
+	INFOLEVEL,		// 对应 loglevel 4
+	TRACELEVEL,		// 对应 loglevel 5
+	DEBUGLEVEL,		// 对应 loglevel 6
+	LASTLOGLEVEL=DEBUGLEVEL // 对应 loglevel 7
 } LOGLEVEL;
 
 /*

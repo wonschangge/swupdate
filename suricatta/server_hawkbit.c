@@ -2214,6 +2214,7 @@ server_t server_hawkbit_funcs = {
 	.help = &server_print_help,
 };
 
+// main函数之前执行
 __attribute__((constructor))
 static void register_server_hawkbit(void)
 {

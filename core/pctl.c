@@ -37,7 +37,7 @@ typedef struct {
 } bgtask;
 
 /* the array contains the pid of the subprocesses */
-#define MAX_PROCESSES	10
+#define MAX_PROCESSES	10 // 最大进程数量限制
 static struct swupdate_task procs[MAX_PROCESSES];
 static int    nprocs = 0;
 
@@ -55,18 +55,19 @@ int pid = 0;
  * The sw_sockfd is used for internal ipc
  * with SWUpdate processes
  */
-
+// 用于SWUpdate进程间的内部IPC
 int sw_sockfd = -1;
 
 /*
  * This allows waiting for initial threads to be ready before spawning subprocesses
+ * 允许在孵化子程序前等待初始化的线程准备就绪
  */
 static int threads_towait = 0;
 static pthread_mutex_t threads_towait_lock = PTHREAD_MUTEX_INITIALIZER;
 static pthread_cond_t threads_towait_cond = PTHREAD_COND_INITIALIZER;
 
 #if defined(__linux__)
-static void parent_dead_handler(int __attribute__ ((__unused__)) dummy)
+static void parent_dead_handler(int __attribute__ ((__unused__)) dummy) // 父进程死掉时的处理
 {
 	_exit(1);
 }
@@ -74,6 +75,7 @@ static void parent_dead_handler(int __attribute__ ((__unused__)) dummy)
 
 /*
  * This is used to spawn internal threads
+ * 孵化线程
  */
 pthread_t start_thread(void *(* start_routine) (void *), void *arg)
 {
@@ -81,14 +83,14 @@ pthread_t start_thread(void *(* start_routine) (void *), void *arg)
 	pthread_t id;
 	pthread_attr_t attr;
 
-	pthread_attr_init(&attr);
+	pthread_attr_init(&attr); // 用默认参数，其实可用 NULL 替代 pthread_create 的第2个参数
 	pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_JOINABLE);
 
-	pthread_mutex_lock(&threads_towait_lock);
-	threads_towait++;
-	pthread_mutex_unlock(&threads_towait_lock);
+	pthread_mutex_lock(&threads_towait_lock); // pthread互斥锁开
+	threads_towait++; // 线程数增长
+	pthread_mutex_unlock(&threads_towait_lock); // pthread互斥锁关
 
-	ret = pthread_create(&id, &attr, start_routine, arg);
+	ret = pthread_create(&id, &attr, start_routine, arg); // 创建线程
 	if (ret) {
 		exit(1);
 	}
@@ -98,13 +100,14 @@ pthread_t start_thread(void *(* start_routine) (void *), void *arg)
 /*
  * Internal threads should signal they are ready if internal subprocesses
  * can be spawned after them
+ * 如果内部子进程孵化它们后，线程准备就绪时应发送信号
  */
 void thread_ready(void)
 {
 	pthread_mutex_lock(&threads_towait_lock);
 	threads_towait--;
 	if (threads_towait == 0)
-		pthread_cond_broadcast(&threads_towait_cond);
+		pthread_cond_broadcast(&threads_towait_cond); // 唤醒等待的线程
 	pthread_mutex_unlock(&threads_towait_lock);
 }
 
@@ -122,6 +125,8 @@ void wait_threads_ready(void)
 /*
  * spawn_process forks and start a new process
  * under a new user
+ * 
+ * fork孵化进程,并在新用户下启动
  */
 static int spawn_process(struct swupdate_task *task,
 			uid_t run_as_userid, gid_t run_as_groupid,
@@ -165,13 +170,14 @@ static int spawn_process(struct swupdate_task *task,
 	sw_sockfd = sockfd[1];
 
 	/* process is running as root, drop privileges */
+	// 丢弃root用户下的特权
 	if (getuid() == 0) {
-		if (setgid(run_as_groupid) != 0) {
+		if (setgid(run_as_groupid) != 0) { // 设置GID
 			ERROR("setgid: Unable to drop group privileges: %s", strerror(errno));
 			return -1;
 		}
 
-		if (setuid(run_as_userid) != 0) {
+		if (setuid(run_as_userid) != 0) { // 设置UID
 			ERROR("setuid: Unable to drop user privileges: %s", strerror(errno));
 			return -1;
 		}
@@ -207,6 +213,7 @@ static int spawn_process(struct swupdate_task *task,
 	}
 }
 
+// 启动swupdate的子进程
 static void start_swupdate_subprocess(sourcetype type, const char *name,
 			uid_t run_as_userid, gid_t run_as_groupid,
 			const char* cfgfile,
@@ -226,6 +233,7 @@ static void start_swupdate_subprocess(sourcetype type, const char *name,
 }
 
 
+// 启动子进程(从配置文件中)
 void start_subprocess_from_file(sourcetype type, const char *name,
 			uid_t run_as_userid, gid_t run_as_groupid,
 			const char *cfgfile,
@@ -235,13 +243,14 @@ void start_subprocess_from_file(sourcetype type, const char *name,
 	start_swupdate_subprocess(type, name, run_as_userid, run_as_groupid, cfgfile, argc, argv, NULL, cmdline);
 }
 
+// 启动子进程
 void start_subprocess(sourcetype type, const char *name,
 			uid_t run_as_userid, gid_t run_as_groupid,
 			const char *cfgfile,
 			int argc, char **argv,
 			swupdate_process start)
 {
-
+	// 启动swupdate的子进程
 	start_swupdate_subprocess(type, name, run_as_userid, run_as_groupid, cfgfile, argc, argv, start, NULL);
 }
 
@@ -546,11 +555,12 @@ const char *pctl_getname_from_type(sourcetype s)
 	return "";
 }
 
+// ipc线程
 void *ipc_thread_fn(void *data)
 {
 	fd_set readfds;
 	int retval;
-	server_ipc_fn fn = (server_ipc_fn)data;
+	server_ipc_fn fn = (server_ipc_fn)data; // data 是 fd
 
 	while (1) {
 		FD_ZERO(&readfds);

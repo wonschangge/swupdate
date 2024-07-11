@@ -50,6 +50,7 @@ static config_setting_t *find_settings_node(config_t *cfg,
 	return setting;
 }
 
+// 读设置文件
 static int read_settings_file(config_t *cfg, const char *filename)
 {
 	int ret;
@@ -58,7 +59,7 @@ static int read_settings_file(config_t *cfg, const char *filename)
 		return -EINVAL;
 
 	DEBUG("Reading config file %s", filename);
-	ret = config_read_file(cfg, filename);
+	ret = config_read_file(cfg, filename); // libconfig读文件
 	if (ret != CONFIG_TRUE) {
 		fprintf(stderr, "%s ", config_error_file(cfg));
 		fprintf(stderr, "%d ", config_error_line(cfg));
@@ -71,6 +72,7 @@ static int read_settings_file(config_t *cfg, const char *filename)
 	return ret;
 }
 
+// 读取模块设置
 int read_module_settings(swupdate_cfg_handle *handle, const char *module, settings_callback fcn, void *data)
 {
 	config_setting_t *elem;
@@ -78,7 +80,7 @@ int read_module_settings(swupdate_cfg_handle *handle, const char *module, settin
 	if (handle == NULL || !fcn)
 		return -EINVAL;
 
-	elem = find_settings_node(&handle->cfg, module);
+	elem = find_settings_node(&handle->cfg, module); // 找到指定module
 
 	if (!elem) {
 		DEBUG("No config settings found for module %s", module);
@@ -86,7 +88,7 @@ int read_module_settings(swupdate_cfg_handle *handle, const char *module, settin
 	}
 
 	DEBUG("Reading config settings for module %s", module);
-	fcn(elem, data);
+	fcn(elem, data); // 执行回调
 
 	return 0;
 }
@@ -158,14 +160,16 @@ int settings_into_dict(void *settings, void *data)
  * Initialize handle with the settings found in filename.
  * This allocates memory which needs to be released by calling swupdate_cfg_destroy().
  */
+// 初始化,分配内存
 void swupdate_cfg_init(swupdate_cfg_handle *handle)
 {
-	config_init(&handle->cfg);
+	config_init(&handle->cfg); // libconfig初始化
 }
 
 /*
  * Read all settings from filename.
  */
+// 从文件中读取所有设置
 int swupdate_cfg_read_file(swupdate_cfg_handle *handle, const char *filename)
 {
 	if (read_settings_file(&handle->cfg, filename) != CONFIG_TRUE) {
@@ -178,7 +182,8 @@ int swupdate_cfg_read_file(swupdate_cfg_handle *handle, const char *filename)
 /*
  * This releases (internally) allocated memory by handle.
  */
+// 释放分配的内存
 void swupdate_cfg_destroy(swupdate_cfg_handle *handle)
 {
-	config_destroy(&handle->cfg);
+	config_destroy(&handle->cfg); // libconfig释放
 }

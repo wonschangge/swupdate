@@ -153,8 +153,8 @@ int flash_erase(int mtdnum)
 
 void mtd_init(void)
 {
-	struct flash_description *flash = get_flash_info();
-	flash->libmtd = libmtd_open();
+	struct flash_description *flash = get_flash_info(); // 闪存描述
+	flash->libmtd = libmtd_open(); // 打开MTD库
 	if (flash->libmtd == NULL) {
 		if (errno == 0)
 			WARN("MTD is not present in the system");
@@ -162,7 +162,7 @@ void mtd_init(void)
 	}
 }
 
-void mtd_set_ubiblacklist(char *mtdlist)
+void mtd_set_ubiblacklist(char *mtdlist) // 
 {
 	strlcpy(mtd_ubi_blacklist, mtdlist, sizeof(mtd_ubi_blacklist));
 }
@@ -237,7 +237,7 @@ void ubi_init(void)
 	int err;
 	libubi_t libubi;
 
-	libubi = libubi_open();
+	libubi = libubi_open(); // 打开libubi库
 	if (!libubi) {
 		return;
 	}

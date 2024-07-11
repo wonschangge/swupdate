@@ -62,7 +62,7 @@
 static pthread_t network_daemon;
 
 /* Tree derived from the configuration file */
-static struct swupdate_cfg swcfg;
+static struct swupdate_cfg swcfg; // SWUpdate配置
 
 int loglevel = ERRORLEVEL;
 int exit_code = EXIT_SUCCESS;
@@ -81,13 +81,13 @@ static struct option long_options[] = {
 #ifdef CONFIG_UBIATTACH
 	{"blacklist", required_argument, NULL, 'b'},
 #endif
-	{"check", no_argument, NULL, 'c'},
+	{"check", no_argument, NULL, 'c'}, // 检查镜像
 #ifdef CONFIG_DOWNLOAD
 	{"download", required_argument, NULL, 'd'},
 #endif
 	{"dry-run", no_argument, NULL, 'n'},
-	{"file", required_argument, NULL, 'f'},
-	{"get-root", no_argument, NULL, 'g'},
+	{"file", required_argument, NULL, 'f'},	// 配置文件
+	{"get-root", no_argument, NULL, 'g'}, // 
 	{"help", no_argument, NULL, 'h'},
 #ifdef CONFIG_HW_COMPATIBILITY
 	{"hwrevision", required_argument, NULL, 'H'},
@@ -110,7 +110,7 @@ static struct option long_options[] = {
 	{"no-reinstalling", required_argument, NULL, 'R'},
 	{"no-state-marker", no_argument, NULL, 'm'},
 	{"no-transaction-marker", no_argument, NULL, 'M'},
-	{"output", required_argument, NULL, 'o'},
+	{"output", required_argument, NULL, 'o'}, // 保存输入流
 	{"preupdate", required_argument, NULL, 'P'},
 	{"postupdate", required_argument, NULL, 'p'},
 	{"select", required_argument, NULL, 'e'},
@@ -259,25 +259,26 @@ static int parse_image_selector(const char *selector, struct swupdate_cfg *sw)
 	return 0;
 }
 
+// 初始化内部树，储存配置，列表使用的bsdqueue
 static void swupdate_init(struct swupdate_cfg *sw)
 {
 	/* Initialize internal tree to store configuration */
 	memset(sw, 0, sizeof(*sw));
-	LIST_INIT(&sw->images);
-	LIST_INIT(&sw->hardware);
-	LIST_INIT(&sw->scripts);
-	LIST_INIT(&sw->bootscripts);
-	LIST_INIT(&sw->bootloader);
-	LIST_INIT(&sw->extprocs);
-	sw->cert_purpose = SSL_PURPOSE_DEFAULT;
+	LIST_INIT(&sw->images); // 镜像列表
+	LIST_INIT(&sw->hardware); // 硬件列表
+	LIST_INIT(&sw->scripts); // 脚本列表
+	LIST_INIT(&sw->bootscripts); // 启动脚本列表
+	LIST_INIT(&sw->bootloader); // bootloader列表
+	LIST_INIT(&sw->extprocs); // 额外程序列表
+	sw->cert_purpose = SSL_PURPOSE_DEFAULT; // 设置SSL证书的目的
 
-#ifdef CONFIG_MTD
+#ifdef CONFIG_MTD // MTD块管理的额外初始化
 	mtd_init();
 	ubi_init();
 #endif
 }
 
-static int parse_cert_purpose(const char *text)
+static int parse_cert_purpose(const char *text) // 向SSL明确目的有何作用？
 {
 	static const char CODE_SIGN[] = "codeSigning";
 	static const char EMAIL_PROT[] = "emailProtection";
@@ -376,7 +377,7 @@ const char *loglevnames[] = {
 	[TRACELEVEL] = "trace"
 };
 
-static int read_console_settings(void *elem, void __attribute__ ((__unused__)) *data)
+static int read_console_settings(void *elem, void __attribute__ ((__unused__)) *data) // 读打印配置
 {
 	char tmp[SWUPDATE_GENERAL_STRING_SIZE] = "";
 	int i;
@@ -395,7 +396,7 @@ static int read_processes_settings(void *settings, void *data)
 	struct swupdate_cfg *sw = (struct swupdate_cfg *)data;
 	void *elem;
 	int count, i;
-	struct extproc *proc, *last = NULL;
+	struct extproc *proc, *last = NULL; // 额外进程
 
 	count = get_array_length(LIBCFG_PARSER, settings);
 
@@ -420,7 +421,7 @@ static int read_processes_settings(void *settings, void *data)
 		GET_FIELD_STRING(LIBCFG_PARSER, elem, "exec", proc->exec);
 
 		if (!last)
-			LIST_INSERT_HEAD(&sw->extprocs, proc, next);
+			LIST_INSERT_HEAD(&sw->extprocs, proc, next); // 非末尾，头插
 		else
 			LIST_INSERT_AFTER(last, proc, next);
 
@@ -438,6 +439,7 @@ static void sigterm_handler(int __attribute__ ((__unused__)) signum)
 	pthread_cancel(network_daemon);
 }
 
+// 主入口
 int main(int argc, char **argv)
 {
 	int c;
@@ -451,28 +453,29 @@ int main(int argc, char **argv)
 	char main_options[256];
 	unsigned int public_key_mandatory = 0;
 	struct sigaction sa;
-#ifdef CONFIG_SURICATTA
+#ifdef CONFIG_SURICATTA	// suricatta - SWUpdate在端侧的守护模式之一，用于轮询服务器
 	int opt_u = 0;
 	char *suricattaoptions;
 	char **argvalues = NULL;
 	int argcount = 0;
 #endif
-#ifdef CONFIG_WEBSERVER
+#ifdef CONFIG_WEBSERVER // webserver/mongoose - SWUpdate在端侧的守护模式之一，用于启动本地Web升级服务器
 	int opt_w = 0;
 	char *weboptions;
 	char **av = NULL;
 	int ac = 0;
 #endif
-#ifdef CONFIG_DOWNLOAD
+#ifdef CONFIG_DOWNLOAD // 启用下载机制，借助curl
 	int opt_d = 0;
 	char *dwloptions;
 #endif
 	char **dwlav = NULL;
 	int dwlac = 0;
 
-#ifdef CONFIG_MTD
+#ifdef CONFIG_MTD // 启用 MTD 块管理机制
 	memset(&flashdesc, 0, sizeof(flashdesc));
 #endif
+// 处理参数列表
 	memset(main_options, 0, sizeof(main_options));
 	memset(image_url, 0, sizeof(image_url));
 	strcpy(main_options, "vhni:e:gq:l:Lcf:p:P:o:N:R:MmB:");
@@ -494,7 +497,7 @@ int main(int argc, char **argv)
 #ifdef CONFIG_SIGNED_IMAGES
 #ifndef CONFIG_SIGALG_GPG
 	strcat(main_options, "k:");
-	public_key_mandatory = 1;
+	public_key_mandatory = 1; // 如果定义了镜像签名，且未定义GPG签名，强制要求有key
 #endif
 #endif
 #ifdef CONFIG_ENCRYPTED_IMAGES
@@ -504,19 +507,20 @@ int main(int argc, char **argv)
 	memset(fname, 0, sizeof(fname));
 
 	/* Initialize internal database */
-	swupdate_init(&swcfg);
+	swupdate_init(&swcfg); // 初始化最重要的配置文件
 
 	/*
 	 * Initialize notifier to enable at least output
 	 * on the console
 	 */
-	notify_init();
+	notify_init(); // 初始化通知器系统，来输出信息
 
 	/*
 	 * Check if there is a configuration file and parse it
 	 * Parse once the command line just to find if a
 	 * configuration file is passed
 	 */
+	// 检查是否有配置文件并解析
 	while ((c = getopt_long(argc, argv, main_options,
 				long_options, NULL)) != EOF) {
 		switch (c) {
@@ -547,6 +551,7 @@ int main(int argc, char **argv)
 	/* Check for (and use) default configuration if present and none
 	 * was supplied on the command line (-f)
 	 */
+	// 检查是否有配置文件并解析，没有指定-f的情况下
 	if (cfgfname == NULL) {
 		struct stat stbuf;
 		if (stat(CONFIG_DEFAULT_CONFIG_FILE, &stbuf) == 0) {
@@ -555,6 +560,7 @@ int main(int argc, char **argv)
 	}
 
 	/* Load configuration file */
+	// 加载配置文件
 	swupdate_cfg_handle handle;
 	swupdate_cfg_init(&handle);
 	if (cfgfname != NULL) {
@@ -564,9 +570,9 @@ int main(int argc, char **argv)
 		 * 'globals' section is mandatory if configuration file is specified.
 		 */
 		if (ret == 0) {
-			ret = read_module_settings(&handle, "globals", read_globals_settings, &swcfg);
+			ret = read_module_settings(&handle, "globals", read_globals_settings, &swcfg); // 强制
 		}
-		if (ret != 0) {
+		if (ret != 0) { // 销毁退出
 			/*
 			 * Exit on -ENODATA or -EINVAL errors.
 			 */
@@ -584,8 +590,8 @@ int main(int argc, char **argv)
 		 * The following sections are optional, hence -ENODATA error code is
 		 * ignored if the section is not found. -EINVAL will not happen here.
 		 */
-		(void)read_module_settings(&handle, "logcolors", read_console_settings, &swcfg);
-		(void)read_module_settings(&handle, "processes", read_processes_settings, &swcfg);
+		(void)read_module_settings(&handle, "logcolors", read_console_settings, &swcfg); // 可选
+		(void)read_module_settings(&handle, "processes", read_processes_settings, &swcfg); // 可选
 	}
 
 	/*
@@ -764,47 +770,47 @@ int main(int argc, char **argv)
 	 * Parameters are parsed: now performs plausibility
 	 * tests before starting processes and threads
 	 */
-	if (public_key_mandatory && !strlen(swcfg.publickeyfname)) {
+	if (public_key_mandatory && !strlen(swcfg.publickeyfname)) { // 强制key时进行检查
 		fprintf(stderr,
 			 "Error: SWUpdate is built for signed images, provide a public key file.\n");
 		exit(EXIT_FAILURE);
 	}
 
-#ifdef CONFIG_SIGALG_GPG
-	if (!strlen(swcfg.gpg_home_directory)) {
+#ifdef CONFIG_SIGALG_GPG // GPG签名的方案
+	if (!strlen(swcfg.gpg_home_directory)) { // 提供：1. gpg-home-dir
 		fprintf(stderr,
 			 "Error: SWUpdate is built for signed images, provide a GnuPG home directory.\n");
 		exit(EXIT_FAILURE);
 	}
-	if (!strlen(swcfg.gpgme_protocol)) {
+	if (!strlen(swcfg.gpgme_protocol)) { // 提供：2. gpgme-protocol
 		fprintf(stderr,
 			"Error: SWUpdate is built for signed images, please specify GnuPG protocol.\n");
 		exit(EXIT_FAILURE);
 	}
 #endif
 
-	if (opt_c && !opt_i) {
+	if (opt_c && !opt_i) { // 检查镜像 -c -i [SWU镜像]
 		fprintf(stderr,
 			"Error: Checking local images requires -i <file>.\n");
 		exit(EXIT_FAILURE);
 	}
 
-	if (opt_i && strlen(swcfg.output)) {
+	if (opt_i && strlen(swcfg.output)) { // 使用 cp 复制
 		fprintf(stderr,
 			"Error: Use cp for -i <image> -o <outfile>.\n");
 		exit(EXIT_FAILURE);
 	}
 
 #ifdef CONFIG_SURICATTA
-	if (opt_u && (opt_c || opt_i)) {
+	if (opt_u && (opt_c || opt_i)) { // 检查suricatta参数 -u同时-c或-i非法 
 		fprintf(stderr, "Error: Invalid mode combination with suricatta.\n");
 		exit(EXIT_FAILURE);
 	}
 #endif
 
-	swupdate_crypto_init();
+	swupdate_crypto_init(); // 密码学模块初始化（外部）
 
-	if (strlen(swcfg.publickeyfname) || strlen(swcfg.gpg_home_directory)) {
+	if (strlen(swcfg.publickeyfname) || strlen(swcfg.gpg_home_directory)) { // 密码模块依赖公钥或GPG
 		if (swupdate_dgst_init(&swcfg, swcfg.publickeyfname)) {
 			fprintf(stderr,
 				 "Error: Crypto cannot be initialized.\n");
@@ -846,7 +852,7 @@ int main(int argc, char **argv)
 	 * If an AES key is passed, load it to allow
 	 * to decrypt images
 	 */
-	if (strlen(swcfg.aeskeyfname)) {
+	if (strlen(swcfg.aeskeyfname)) { // 加载描述文件key
 		if (load_decryption_key(swcfg.aeskeyfname)) {
 			fprintf(stderr,
 				"Error: Key file does not contain a valid AES key.\n");
@@ -894,7 +900,7 @@ int main(int argc, char **argv)
 	start_thread(progress_bar_thread, NULL);
 
 	/* wait for threads to be done before starting children */
-	wait_threads_ready();
+	wait_threads_ready(); // 等待所有线程就绪，再启动子进程
 
 	/* Start embedded web server */
 #if defined(CONFIG_MONGOOSE)
@@ -913,10 +919,10 @@ int main(int argc, char **argv)
 	if (opt_u) {
 		uid_t uid;
 		gid_t gid;
-		read_settings_user_id(&handle, "suricatta", &uid, &gid);
-		start_subprocess(SOURCE_SURICATTA, "suricatta", uid, gid,
+		read_settings_user_id(&handle, "suricatta", &uid, &gid); // suricatta的进程用户ID和组ID
+		start_subprocess(SOURCE_SURICATTA, "suricatta", uid, gid, // 开启子进程
 				 cfgfname, argcount,
-				 argvalues, start_suricatta);
+				 argvalues, start_suricatta); // 最后一个参数为启动函数
 
 		freeargs(argvalues);
 	}
@@ -947,6 +953,7 @@ int main(int argc, char **argv)
 
 	/*
 	 * Start all processes added in the config file
+	 * 启动添在配置文件中的所有进程---processes对象中的列表
 	 */
 	struct extproc *proc;
 
@@ -957,7 +964,7 @@ int main(int argc, char **argv)
 
 		uid_t uid;
 		gid_t gid;
-		read_settings_user_id(&handle, proc->name, &uid, &gid);
+		read_settings_user_id(&handle, proc->name, &uid, &gid); // 各个附加进程可以设置自己的UID/GID
 		start_subprocess_from_file(SOURCE_UNKNOWN, proc->name, uid, gid,
 					   cfgfname, dwlac,
 					   dwlav, dwlav[0]);

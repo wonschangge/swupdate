@@ -18,7 +18,7 @@ extern int sw_sockfd;
  * This is used by the core process
  * to monitor all derived processes
  */
-struct swupdate_task {
+struct swupdate_task { // swupdate子进程结构体,用于监控所有派生进程
 	pid_t	pid;
 	int	pipe;
 	sourcetype	type;

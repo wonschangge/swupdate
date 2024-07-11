@@ -49,7 +49,7 @@ extern char* SOCKET_PROGRESS_PATH;
  * Message sent via progress socket.
  * Data is sent in LE if required.
  */
-struct progress_msg {
+struct progress_msg { // 进度消息结构体
 	unsigned int	apiversion;	/* API Version for compatibility check */
 	RECOVERY_STATUS	status;		/* Update Status (Running, Failure) */
 	unsigned int	dwl_percent;	/* % downloaded data */

@@ -55,7 +55,10 @@ def logresult(func):
 
 
 def extract_device_name(query):
+    for x in bottle.request.headers:
+        print (x, bottle.request.headers[x])
     device_name = bottle.request.headers.get("name")
+    print(device_name)
     if device_name is None and len(query) > 0:
         device_name = "".join(ch for ch in "".join(map("".join, sorted(query.items()))) if ch.isalnum())
     return device_name

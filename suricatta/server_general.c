@@ -65,7 +65,7 @@ static unsigned short mandatory_argument_count = 0;
  * Structure passed to progress thread
  * with configuration (URL to LOG, setup)
  */
-typedef struct {
+typedef struct { // 传给progress线程的结构体（URL到LOG的设置）
 	char *url;
 	struct dict *identify;
 	char *fname;
@@ -86,12 +86,14 @@ static server_progress_data progdata;
 
 extern channel_op_res_t channel_curl_init(void);
 
+// 通用服务器结构体初始化
 server_general_t server_general = {.url = NULL,
 				   .polling_interval = 30,
 				   .debug = false,
 				   .cached_file = NULL,
 				   .channel = NULL};
 
+// 频道数据结构体初始化
 static channel_data_t channel_data_defaults = {.debug = false,
 					       .source = SOURCE_SURICATTA,
 					       .retries = CHANNEL_DEFAULT_RESUME_TRIES,
@@ -170,6 +172,7 @@ static int server_logevent_settings(void *settings, void  *data)
  * If no match is found, the field is interpreted as constant and
  * sent as it is.
  */
+// 格式化log为CSV格式
 static char *server_format_log(const char *event, struct dict *fmtevents,
 				struct dict *identify)
 {
@@ -228,7 +231,8 @@ static char *server_format_log(const char *event, struct dict *fmtevents,
  * It manages to send the LOG to the server with PUT
  * method
  */
-
+// 进度线程，作为一个分离的进程使用角度接口获取所有安装期间的变化，
+// 管理使用PUT方法发送LOG到服务器
 static void *server_progress_thread (void *data)
 {
 	int progfd = -1;		/* File descriptor progress API */
@@ -341,6 +345,7 @@ static void *server_progress_thread (void *data)
 	pthread_exit((void *)0);
 }
 
+// 准备查询
 static char *server_prepare_query(char *url, struct dict *dict)
 {
 	int ret;
@@ -379,7 +384,7 @@ static char *server_prepare_query(char *url, struct dict *dict)
 		/*
 		 * Free temporary allocated memory
 		 */
-		free(encoded);
+		free(encoded); // 释放临时内存
 
 		if (ret == ENOMEM_ASPRINTF) {
 			ERROR("Error generating query for general service");
@@ -444,6 +449,7 @@ static server_op_res_t server_set_polling_interval(char *poll)
 	return SERVER_OK;
 }
 
+// 获取部署信息
 static server_op_res_t server_get_deployment_info(channel_t *channel, channel_data_t *channel_data)
 {
 	char *pollstring;
@@ -456,6 +462,7 @@ static server_op_res_t server_get_deployment_info(channel_t *channel, channel_da
 	 * Function allocates memory for URL, it must be freed before
 	 * returning
 	 */
+	// 准备查询
 	channel_data->url= server_prepare_query(server_general.url, &server_general.configdata);
 
 	LIST_INIT(&server_general.received_httpheaders);
@@ -580,21 +587,21 @@ static int server_general_settings(void *elem, void  __attribute__ ((__unused__)
 {
 	char tmp[128];
 
-	GET_FIELD_STRING_RESET(LIBCFG_PARSER, elem, "url", tmp);
+	GET_FIELD_STRING_RESET(LIBCFG_PARSER, elem, "url", tmp); // 读 url
 	if (strlen(tmp)) {
 		SETSTRING(server_general.url, tmp);
 		mandatory_argument_count |= URL_BIT;
 	}
 
-	GET_FIELD_STRING_RESET(LIBCFG_PARSER, elem, "logurl", tmp);
+	GET_FIELD_STRING_RESET(LIBCFG_PARSER, elem, "logurl", tmp); // 读 logurl
 	if (strlen(tmp)) {
 		SETSTRING(server_general.logurl, tmp);
 	}
 
-	get_field(LIBCFG_PARSER, elem, "polldelay",
+	get_field(LIBCFG_PARSER, elem, "polldelay", // 读 polldelay
 		&server_general.polling_interval);
 
-	channel_settings(elem, &channel_data_defaults);
+	channel_settings(elem, &channel_data_defaults); // 读通用的channel设置字段
 
 	return 0;
 }
@@ -606,12 +613,12 @@ static server_op_res_t server_start(const char *fname, int argc, char *argv[])
 	LIST_INIT(&server_general.configdata);
 	LIST_INIT(&server_general.httpheaders_to_send);
 
-	if (fname) {
+	if (fname) { // 解析配置文件
 		swupdate_cfg_handle handle;
 		swupdate_cfg_init(&handle);
 		if (swupdate_cfg_read_file(&handle, fname) == 0) {
-			read_module_settings(&handle, "gservice", server_general_settings, NULL);
-			read_module_settings(&handle, "identify", settings_into_dict, &server_general.configdata);
+			read_module_settings(&handle, "gservice", server_general_settings, NULL); // 读 gservice 字段
+			read_module_settings(&handle, "identify", settings_into_dict, &server_general.configdata); // 读 identify 字段
 		}
 		swupdate_cfg_destroy(&handle);
 	}
@@ -689,6 +696,7 @@ static server_op_res_t server_start(const char *fname, int argc, char *argv[])
 	/*
 	 * Allocate a channel to communicate with the server
 	 */
+	// 与服务器通信的channel
 	server_general.channel = channel_new();
 	if (!server_general.channel)
 		return SERVER_EINIT;
@@ -734,6 +742,7 @@ static server_t server = {
 	.help = &server_print_help,
 };
 
+// main函数之前执行
 __attribute__((constructor))
 static void register_server_general(void)
 {

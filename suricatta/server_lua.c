@@ -1503,6 +1503,8 @@ static int lua_suricatta_sleep(lua_State *L)
 
 /**
  * @brief Register the 'suricatta' module to Lua.
+ * 
+ * 注册 suricatta 模块到 lua 中
  *
  * @param  L  The Lua state.
  * @return 1, i.e., the 'suricatta' module Table on stack.
@@ -1727,7 +1729,7 @@ static server_op_res_t suricatta_lua_create(void)
 		TRACE("[Lua suricatta] Lua state already initialized.");
 		return SERVER_OK;
 	}
-	if (!(gL = luaL_newstate())) {
+	if (!(gL = luaL_newstate())) { // 检查lua模块状态
 		ERROR("Unable to register Suricatta Lua module.");
 		return SERVER_EINIT;
 	}
@@ -2029,6 +2031,7 @@ static server_t server = {
 	.help = &server_print_help,
 };
 
+// main函数之前执行
 __attribute__((constructor))
 static void register_server_lua(void)
 {

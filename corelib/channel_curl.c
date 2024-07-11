@@ -92,6 +92,7 @@ channel_op_res_t channel_curl_init(void);
 channel_t *channel_new(void);
 
 
+// curl频道初始化
 channel_op_res_t channel_curl_init(void)
 {
 #if defined(CONFIG_CHANNEL_CURL_SSL)

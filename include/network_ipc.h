@@ -22,7 +22,7 @@ extern "C" {
  * headers are not exported.
  */
 
-#define IPC_MAGIC		0x14052001
+#define IPC_MAGIC		0x14052001 // 内部IPC消息魔数
 
 typedef enum {
 	REQ_INSTALL,
@@ -40,18 +40,18 @@ typedef enum {
 	GET_HW_REVISION,
 	SET_SWUPDATE_VARS,
 	GET_SWUPDATE_VARS,
-} msgtype;
+} msgtype; // 消息类型
 
 /*
  * Commands are used for IPC to subprocesses. The meaning is then interpreted
  * by the single subprocess
  */
-enum {
+enum { // IPC消息指令类型
 	CMD_ACTIVATION,	/* this returns the answer if a SW can be activated */
-	CMD_CONFIG,
-	CMD_ENABLE,	/* Enable or disable suricatta mode */
-	CMD_GET_STATUS,
-	CMD_SET_DOWNLOAD_URL
+	CMD_CONFIG, // 配置
+	CMD_ENABLE,	/* Enable or disable suricatta mode */ // 启用suricatta模式
+	CMD_GET_STATUS, // 获取状态
+	CMD_SET_DOWNLOAD_URL // 设置下载URL
 };
 
 enum run_type {

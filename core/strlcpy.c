@@ -19,7 +19,7 @@
  * Returns strlen(src); if retval >= dsize, truncation occurred.
  */
 size_t
-strlcpy(char * __restrict dst, const char * __restrict src, size_t dsize)
+strlcpy(char * __restrict dst, const char * __restrict src, size_t dsize) // freebsd的strlcpy函数
 {
 	const char *osrc = src;
 	size_t nleft = dsize;

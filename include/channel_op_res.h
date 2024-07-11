@@ -10,7 +10,7 @@
 
 #pragma once
 
-typedef enum {
+typedef enum { // 频道操作结果，对应POSIX网络相关的错误码
 	CHANNEL_OK,
 	CHANNEL_EINIT,
 	CHANNEL_ENONET,

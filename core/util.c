@@ -59,6 +59,7 @@ static struct decryption_key *aes_key = NULL;
 
 static char *fwenv_config = NULL;
 
+// string duplicate - 同c++的strdup函数
 char *sdup(const char *str) {
 	char *p;
 	if ((p = (char *) malloc(strlen(str) + 1)) != NULL) {
@@ -874,6 +875,7 @@ size_t snescape(char *dst, size_t n, const char *src)
 static int filter_slave(const struct dirent *ent) {
 	return (strcmp(ent->d_name, ".") && strcmp(ent->d_name, ".."));
 }
+// 获取根文件系统
 static char *get_root_containerized_fs(int major, int minor)
 {
 	struct dirent **devlist = NULL;
@@ -893,6 +895,7 @@ static char *get_root_containerized_fs(int major, int minor)
 /*
  * Return the real full path to a device, or NULL.
  */
+// 返回设备的真实完整路径
 static char *getroot_abs_path(char* devname)
 {
 	int fd;
@@ -930,6 +933,7 @@ static char *getroot_abs_path(char* devname)
  * Return the rootfs's device name from /proc/partitions supporting
  * containerized filesystems such as, e.g., LUKS.
  */
+// 从/proc/partitions返回rootfs的设备名
 static char *get_root_from_partitions(void)
 {
 	struct stat info;
@@ -975,6 +979,7 @@ static char *get_root_from_partitions(void)
  * Needed for filesystems having synthetic stat(2) st_dev
  * values such as BTRFS.
  */
+// 从/proc/self/mountinfo中返回rootfs的设备名
 static char *get_root_from_mountinfo(void)
 {
 	char *mnt_point, *device = NULL;

@@ -234,7 +234,8 @@ int main(int argc, char *argv[]) {
 		if (send_file(NULL)) cleanup_and_exit(EXIT_FAILURE);
 	} else {
 		for (int i = 0; i < argc; i++) {
-			if (send_file(argv[i])) cleanup_and_exit(EXIT_FAILURE);
+			if (
+				(argv[i])) cleanup_and_exit(EXIT_FAILURE);
 		}
 	}
 

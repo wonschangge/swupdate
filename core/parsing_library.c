@@ -21,6 +21,7 @@
 
 #define MAX_LINKS_DEPTH	10
 
+// 检查串
 void check_field_string(const char *src, char *dst, const size_t max_len)
 {
 	assert(max_len>0);
@@ -80,7 +81,7 @@ void iterate_field(parsertype p, void *e, iterate_callback cb, void *data)
 	}
 }
 
-void *get_elem_from_idx(parsertype p, void *node, int idx)
+void *get_elem_from_idx(parsertype p, void *node, int idx) // 从索引找节点
 {
 	switch (p) {
 	case LIBCFG_PARSER:
@@ -95,13 +96,14 @@ void *get_elem_from_idx(parsertype p, void *node, int idx)
 	return NULL;
 }
 
+// 得到指定串
 const char *get_field_string(parsertype p, void *e, const char *path)
 {
 	switch (p) {
 	case LIBCFG_PARSER:
-		return get_field_string_libconfig(e, path);
+		return get_field_string_libconfig(e, path); // 使用 libconfig 读
 	case JSON_PARSER:
-		return get_field_string_json(e, path);
+		return get_field_string_json(e, path); // 使用 json 读
 	default:
 		(void)e;
 		(void)path;
@@ -110,6 +112,7 @@ const char *get_field_string(parsertype p, void *e, const char *path)
 	return NULL;
 }
 
+// 使用指定长度获取字符串
 void get_field_string_with_size(parsertype p, void *e, const char *path, char *d, size_t n)
 {
 	const char *s = NULL;

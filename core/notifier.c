@@ -60,8 +60,8 @@ struct notify_ipc_msg {
 	char buf[NOTIFY_BUF_SIZE];
 };
 
-static struct sockaddr_un notify_client;
-static struct sockaddr_un notify_server;
+static struct sockaddr_un notify_client; // 通知器客户端(多个)
+static struct sockaddr_un notify_server; // 通知器服务端
 static int notifyfd = -1;
 static bool console_priority_prefix = false;
 static bool console_ansi_colors = false;
@@ -97,15 +97,15 @@ enum console_attr {
 
 
 enum console_colors {
-	BLACK,
-	RED,
-	GREEN,
-	YELLOW,
-	BLUE,
-	MAGENTA,
-	CYAN,
-	WHITE,
-	COLOR_NONE
+	BLACK,			// 黑
+	RED,			// 红
+	GREEN,			// 绿
+	YELLOW,			// 黄
+	BLUE,			// 蓝
+	MAGENTA,		// 洋红
+	CYAN,			// 青
+	WHITE,			// 白
+	COLOR_NONE		// 无色
 };
 
 struct logcolor {
@@ -148,7 +148,7 @@ struct logcolor consolecolors[] = {
 	[TRACELEVEL] = {RESET, COLOR_NONE, COLOR_NONE}
 };
 
-static void set_console_color(int level, char *buf, size_t size) {
+static void set_console_color(int level, char *buf, size_t size) { // 设置打印颜色到buf字符串中
 	struct logcolor *attr;
 	if (level < 0 || level >= ARRAY_SIZE(consolecolors))
 		return;
@@ -194,7 +194,7 @@ void notifier_set_color(int level, char *col)
  * receive any notification that is sent via
  * the notify() call
  */
-int register_notifier(notifier client)
+int register_notifier(notifier client) // 往通知客户端列表添加有通知业务的客户端
 {
 
 	struct notify_elem *newclient;
@@ -208,7 +208,7 @@ int register_notifier(notifier client)
 	newclient->client = client;
 
 	pthread_mutex_lock(&clients_mutex);
-	STAILQ_INSERT_TAIL(&clients, newclient, next);
+	STAILQ_INSERT_TAIL(&clients, newclient, next); // 在队尾插入
 	pthread_mutex_unlock(&clients_mutex);
 
 	return 0;
@@ -249,6 +249,7 @@ void notify(RECOVERY_STATUS status, int error, int level, const char *msg)
 }
 
 /*
+ * 基础通知器，纯打印到标准输出
  * Default notifier, it prints to stdout
  */
 static void console_notifier (RECOVERY_STATUS status, int error, int level, const char *msg)
@@ -281,6 +282,7 @@ static void console_notifier (RECOVERY_STATUS status, int error, int level, cons
 	 * PROGRESS is a special case. It is used for subprocesses to send
 	 * progress information via the notifier. A trace with this status
 	 * is processed by the progress notifier
+	 * 子进程中通过通知器发送进度数据，归进度通知器跟踪
 	 */
 	case PROGRESS:
 		return;
@@ -392,7 +394,7 @@ static void setup_socket_cleanup(struct sockaddr_un *addr)
 /*
  * Utility function to setup the internal IPC
  */
-static void addr_init(struct sockaddr_un *addr, const char *path)
+static void addr_init(struct sockaddr_un *addr, const char *path) // 设置内部IPC地址
 {
 	memset(addr, 0, sizeof(struct sockaddr_un));
 	addr->sun_family = AF_UNIX;
@@ -400,7 +402,7 @@ static void addr_init(struct sockaddr_un *addr, const char *path)
 	/*
 	 * Use Linux-specific abstract sockets for this internal interface
 	 */
-	strcpy(&addr->sun_path[1], path);
+	strcpy(&addr->sun_path[1], path); // 通知客户端的名字
 	addr->sun_path[0] = '\0';
 #elif defined(__FreeBSD__)
 	/*
@@ -480,10 +482,10 @@ static void *notifier_thread (void __attribute__ ((__unused__)) *data)
 	} while(1);
 }
 
-void notify_init(void)
+void notify_init(void) // 初始化通知(主进程和子进程都需要)
 {
 
-#ifdef CONFIG_SYSTEMD
+#ifdef CONFIG_SYSTEMD // 面向使用systemd的os，并打开了swupdate对systemd的支持
 	/*
 	 * If the init system is systemd and SWUpdate is run as
 	 * systemd service, then prefix the console log messages
@@ -510,7 +512,7 @@ void notify_init(void)
 	console_ansi_colors = (isatty(fileno(stdout)) && isatty(fileno(stderr)))
 		? true : false;
 
-	if (pid == getpid()) {
+	if (pid == getpid()) { // 子进程
 		char buf[60];
 		snprintf(buf, sizeof(buf), "Notify%d", pid);
 		addr_init(&notify_client, buf);
@@ -535,18 +537,19 @@ void notify_init(void)
 			close(notifyfd);
 			return;
 		}
-	} else {
+	} else { // 主进程
 		/*
 		 * If this is the main process, start setting the name of the
 		 * socket. This can changed if more as one instance of swupdate
 		 * is started (name adjusted to avoid adrress is in use)
 		 */
-		addr_init(&notify_server, "NotifyServer");
+		// 在主进程初始化通知服务器
+		addr_init(&notify_server, "NotifyServer"); // 初始化通知服务地址
 		STAILQ_INIT(&clients);
-		pthread_mutex_init(&clients_mutex, NULL);
-		register_notifier(console_notifier);
-		register_notifier(process_notifier);
-		register_notifier(progress_notifier);
+		pthread_mutex_init(&clients_mutex, NULL); // 
+		register_notifier(console_notifier); // 注册打印通知器
+		register_notifier(process_notifier); // 注册进程通知器
+		register_notifier(progress_notifier); // 注册进度通知器
 		start_thread(notifier_thread, NULL);
 	}
 }

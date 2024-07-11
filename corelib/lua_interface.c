@@ -1210,7 +1210,7 @@ static const luaL_Reg l_swupdate_handler[] = {
  * @param [in] the Lua Stack
  * @return 1 (nr. of results on stack, the 'swupdate' module table)
  */
-static int luaopen_swupdate(lua_State *L)
+static int luaopen_swupdate(lua_State *L) // 注册swupdate包到lua堆栈
 {
 	luaL_newlib (L, l_swupdate);
 
@@ -1457,10 +1457,10 @@ call_handler_exit:
 int lua_handlers_init(void)
 {
 	static const char location[] =
-#if defined(CONFIG_EMBEDDED_LUA_HANDLER)
+#if defined(CONFIG_EMBEDDED_LUA_HANDLER) // 内嵌
 		"Compiled-in";
 #else
-		"External";
+		"External";	// 外部几个路径
 #endif
 	int ret = -1;
 
@@ -1478,7 +1478,7 @@ int lua_handlers_init(void)
 		ret = (luaL_loadbuffer(gL, EMBEDDED_LUA_SRC_START, EMBEDDED_LUA_SRC_END-EMBEDDED_LUA_SRC_START, "LuaHandler") ||
 		       lua_pcall(gL, 0, LUA_MULTRET, 0));
 #else
-		ret = luaL_dostring(gL, "require (\"swupdate_handlers\")");
+		ret = luaL_dostring(gL, "require (\"swupdate_handlers\")"); // 预载 swupdate_handlers
 #endif
 		if (ret != 0) {
 			INFO("%s Lua handler(s) not found.", location);
@@ -1487,7 +1487,7 @@ int lua_handlers_init(void)
 		} else {
 			INFO("%s Lua handler(s) found and loaded.", location);
 		}
-	} else	{
+	} else	{ // 注册lua上下文失败
 		WARN("Unable to register Lua context for callbacks");
 	}
 

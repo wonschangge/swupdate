@@ -37,13 +37,13 @@ static sem_t suricatta_enable_sema;
 typedef struct {
 	const char *name;
 	server_t *funcs;
-} server_entry;
+} server_entry; // suricatta远程服务器的定义
 
 static int servers_count = 0;
 static server_entry *servers = NULL;
 static server_t *server = NULL;
 
-bool register_server(const char *name, server_t *srv)
+bool register_server(const char *name, server_t *srv) // hawkbit/general/lua注册
 {
 	if (!name || !srv) {
 		return false;
@@ -60,6 +60,7 @@ bool register_server(const char *name, server_t *srv)
 	return true;
 }
 
+// 选择一个给定的server模式，要与已装载的 hawkbit/lua/general 相匹配
 static bool set_server(const char *name)
 {
 	if (!name || !strlen(name)) {
@@ -94,6 +95,7 @@ void suricatta_print_help(void)
 	}
 }
 
+// 使能suricatta函数
 static server_op_res_t suricatta_enable(ipc_message *msg)
 {
 	struct json_object *json_root;
@@ -107,6 +109,7 @@ static server_op_res_t suricatta_enable(ipc_message *msg)
 		return SERVER_EERR;
 	}
 
+	// 读 enable key
 	json_data = json_get_path_key(
 	    json_root, (const char *[]){"enable", NULL});
 	if (json_data) {
@@ -123,6 +126,9 @@ static server_op_res_t suricatta_enable(ipc_message *msg)
 	   * online, and it just checks for updates (and then update should run
 	   * immediately) just when online.
 	   */
+	  // 检查是否通过IPC（trigger）轮询服务器
+	  // 这允许客户端强制检查更新是否可用。在设备不总是在线的场景很有用。仅在在线是检查更新并立即执行更新。
+	  // 读 trigger
 	  json_data = json_get_path_key(
 	      json_root, (const char *[]){"trigger", NULL});
 	  if (json_data) {
@@ -139,6 +145,7 @@ static server_op_res_t suricatta_enable(ipc_message *msg)
 	return SERVER_OK;
 }
 
+// IPC消息函数
 static server_op_res_t suricatta_ipc(int fd)
 {
 	ipc_message msg;
@@ -157,7 +164,7 @@ static server_op_res_t suricatta_ipc(int fd)
 		break;
 	}
 
-	if (write(fd, &msg, sizeof(msg)) != sizeof(msg)) {
+	if (write(fd, &msg, sizeof(msg)) != sizeof(msg)) { // 同步IPC消息
 		TRACE("IPC ERROR: sending back msg");
 	}
 
@@ -165,7 +172,7 @@ static server_op_res_t suricatta_ipc(int fd)
 	return result;
 }
 
-static int suricatta_settings(void *elem, void  __attribute__ ((__unused__)) *data)
+static int suricatta_settings(void *elem, void  __attribute__ ((__unused__)) *data) // suricatta读配置文件
 {
 	get_field(LIBCFG_PARSER, elem, "enable",
 		&enable);
@@ -185,12 +192,12 @@ int suricatta_wait(int seconds)
 	int retval;
 	int enable_entry = enable;
 
-	clock_gettime(CLOCK_REALTIME, &tp);
-	int t_entry = tp.tv_sec;
+	clock_gettime(CLOCK_REALTIME, &tp); // nanoseconds ～ 从1970.1.1到现在
+	int t_entry = tp.tv_sec; // seconds
 
 	tp.tv_sec += seconds;
 	DEBUG("Sleeping for %d seconds.", seconds);
-	retval = sem_timedwait(&suricatta_enable_sema, &tp);
+	retval = sem_timedwait(&suricatta_enable_sema, &tp); // 超时以等待信号量
 
 	if (retval) {
 		if (errno != ETIMEDOUT) {
@@ -219,10 +226,10 @@ int suricatta_wait(int seconds)
 	return 0;
 }
 
-int start_suricatta(const char *cfgfname, int argc, char *argv[])
+int start_suricatta(const char *cfgfname, int argc, char *argv[]) // 启动函数
 {
 	int action_id;
-	sigset_t sigpipe_mask;
+	sigset_t sigpipe_mask;  // 一组信号：阻塞、非阻塞、等待
 	sigset_t saved_mask;
 	int choice = 0;
 	char **serverargv;
@@ -236,6 +243,7 @@ int start_suricatta(const char *cfgfname, int argc, char *argv[])
 	 * to pass unchanged to the server instance.
 	 * getopt() will change them when called here
 	 */
+	// 本地复制一遍，以防在getOpts中需要进行修改
 	serverargv = (char **)malloc(argc * sizeof(char *));
 	if (!serverargv) {
 		ERROR("OOM starting suricatta, exiting !");
@@ -249,7 +257,7 @@ int start_suricatta(const char *cfgfname, int argc, char *argv[])
 	 * First check for common properties that do not depend
 	 * from server implementation
 	 */
-	if (cfgfname) {
+	if (cfgfname) { // 读配置文件
 		swupdate_cfg_handle handle;
 		swupdate_cfg_init(&handle);
 		if (swupdate_cfg_read_file(&handle, cfgfname) == 0) {
@@ -312,28 +320,29 @@ int start_suricatta(const char *cfgfname, int argc, char *argv[])
 
 	/*
 	 * Now start a specific implementation of the server
+	 * 启动面向server类型的特定实现
 	 */
 	if (server->start(cfgfname, argc, serverargv) != SERVER_OK) {
 		exit(EXIT_FAILURE);
 	}
 	free(serverargv);
 
-	TRACE("Server initialized, entering suricatta main loop.");
-	while (true) {
+	TRACE("Server initialized, entering suricatta main loop."); // suricatta进入阻塞态
+	while (true) { // polling
 		if (enable || trigger) {
 			trigger = false;
-			switch (server->has_pending_action(&action_id)) {
-			case SERVER_UPDATE_AVAILABLE:
+			switch (server->has_pending_action(&action_id)) { // 对正在进行的动作进行处理
+			case SERVER_UPDATE_AVAILABLE: // 有可用更新
 				DEBUG("About to process available update.");
 				server->install_update();
 				break;
-			case SERVER_ID_REQUESTED:
+			case SERVER_ID_REQUESTED: // 请求ID
 				server->send_target_data();
 				trigger = true;
 				break;
-			case SERVER_EINIT:
+			case SERVER_EINIT: // 初始化错误
 				break;
-			case SERVER_OK:
+			case SERVER_OK: // 无事发生
 			default:
 				DEBUG("No pending action to process.");
 				break;
@@ -343,7 +352,7 @@ int start_suricatta(const char *cfgfname, int argc, char *argv[])
 		for (int wait_seconds = server->get_polling_interval();
 			 wait_seconds > 0;
 			 wait_seconds = min(wait_seconds, (int)server->get_polling_interval())) {
-			wait_seconds = suricatta_wait(wait_seconds);
+			wait_seconds = suricatta_wait(wait_seconds); // 休眠
 		}
 
 		TRACE("Suricatta awakened.");

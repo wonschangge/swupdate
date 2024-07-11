@@ -33,7 +33,7 @@ static struct {
 	int  (*env_finalize_update)(ebgenv_t *e);
 } libebg;
 
-
+// EFI启动保护
 /*
  * ----------------------------------------------------------------------------
  * |  Logics, Assumptions & Rationale                                         |

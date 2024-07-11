@@ -720,7 +720,7 @@ static void ev_handler(struct mg_connection *nc, int ev, void *ev_data, void *fn
 	}
 }
 
-static int mongoose_settings(void *elem, void  __attribute__ ((__unused__)) *data)
+static int mongoose_settings(void *elem, void  __attribute__ ((__unused__)) *data) // 读配置
 {
 	struct mongoose_options *opts = (struct mongoose_options *)data;
 	char tmp[128];
@@ -799,7 +799,7 @@ void mongoose_print_help(void)
 		MG_PORT, MG_ROOT);
 }
 
-int start_mongoose(const char *cfgfname, int argc, char *argv[])
+int start_mongoose(const char *cfgfname, int argc, char *argv[]) // webserver启动
 {
 	struct mongoose_options opts;
 	struct mg_mgr mgr;

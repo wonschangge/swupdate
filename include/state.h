@@ -29,15 +29,15 @@
 
 typedef enum {
 	STATE_OK = '0',
-	STATE_INSTALLED = '1',
+	STATE_INSTALLED = '1', // 该更新已安装过，通过版本检查得到的结果
 	STATE_TESTING = '2',
 	STATE_FAILED = '3',
-	STATE_NOT_AVAILABLE = '4',
+	STATE_NOT_AVAILABLE = '4', // 在环境变量中读不到 ustate
 	STATE_ERROR = '5',
 	STATE_WAIT = '6',
 	STATE_IN_PROGRESS = '7',
 	STATE_LAST = STATE_IN_PROGRESS
-} update_state_t;
+} update_state_t; // ustate U-Boot环境变量
 
 static inline bool is_valid_state(update_state_t state) {
 	return (state >= STATE_OK && state <= STATE_LAST);

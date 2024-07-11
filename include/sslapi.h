@@ -122,7 +122,7 @@ struct swupdate_digest {
  * It must be called just once
  */
 #if OPENSSL_VERSION_NUMBER < 0x10100000L
-#define swupdate_crypto_init() { \
+#define swupdate_crypto_init() { \			// openSSL
 	do { \
 		CRYPTO_malloc_init(); \
 		OpenSSL_add_all_algorithms(); \

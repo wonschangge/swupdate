@@ -40,7 +40,7 @@ char *get_ctrl_socket(void) {
 	return SOCKET_CTRL_PATH;
 }
 
-static int prepare_ipc(void) {
+static int prepare_ipc(void) { // 准备UDS IPC管道
 	int connfd;
 	struct sockaddr_un servaddr;
 
@@ -235,7 +235,7 @@ int ipc_notify_receive(int *connfd, ipc_message *msg)
 		return -1;
 	}
 
-	if (msg->magic != IPC_MAGIC) {
+	if (msg->magic != IPC_MAGIC) { // 魔数校验
 		fprintf(stdout, "Connection closing, invalid magic...\n");
 		close(*connfd);
 		*connfd = -1;
@@ -364,19 +364,19 @@ int ipc_wait_for_complete(getstatus callback)
 	return message.data.status.last_result;
 }
 
-int ipc_send_cmd(ipc_message *msg)
+int ipc_send_cmd(ipc_message *msg) // IPC发送指令
 {
-	int connfd = prepare_ipc();
+	int connfd = prepare_ipc(); // 准备管道
 	if (connfd < 0)
 		return -1;
 
 	/* TODO: Check source type */
-	msg->magic = IPC_MAGIC;
+	msg->magic = IPC_MAGIC; // 设置消息魔数
 
 	int ret = write(connfd, msg, sizeof(*msg)) != sizeof(*msg) ||
-		read(connfd, msg, sizeof(*msg))  != sizeof(*msg);
+		read(connfd, msg, sizeof(*msg))  != sizeof(*msg); // 写或读
 
-	close(connfd);
+	close(connfd); // 关闭管道
 
 	return -ret;
 }

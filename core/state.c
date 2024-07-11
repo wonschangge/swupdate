@@ -21,6 +21,7 @@
  * This check is to avoid to corrupt the environment
  * An empty key is accepted, but U-Boot reports a corrupted
  * environment/
+ * 避免接收空串时出错，并将其写为 ustate
  */
 #define CHECK_STATE_VAR(v) do { \
 	if (v[0] == 0) { \
@@ -58,7 +59,7 @@ int save_state(update_state_t value)
 	}
 }
 
-static update_state_t read_state(char *key)
+static update_state_t read_state(char *key) // 读 ustate 值
 {
 	CHECK_STATE_VAR(key);
 
@@ -94,8 +95,8 @@ static update_state_t do_get_state(void) {
 	return STATE_NOT_AVAILABLE;
 }
 
-update_state_t get_state(void) {
-	if (pid == getpid())
+update_state_t get_state(void) { // 获取更新状态
+	if (pid == getpid()) // 子进程UDS IPC获取更新状态
 	{
 		ipc_message msg;
 		memset(&msg, 0, sizeof(msg));
@@ -108,7 +109,7 @@ update_state_t get_state(void) {
 		}
 
 		return (update_state_t)msg.data.msg[0];
-	} else {
+	} else { // 主进程获取状态
 		// Main process
 		return do_get_state();
 	}

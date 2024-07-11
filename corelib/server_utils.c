@@ -81,6 +81,7 @@ server_op_res_t map_channel_retcode(channel_op_res_t response)
 	return SERVER_EERR;
 }
 
+// 反序列化buf
 struct json_object *server_tokenize_msg(char *buf, size_t size)
 {
 

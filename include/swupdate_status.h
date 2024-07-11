@@ -16,26 +16,26 @@ extern "C" {
  * New values should be put at the end without altering the order.
  */
 
-typedef enum {
-	IDLE,
-	START,
-	RUN,
-	SUCCESS,
-	FAILURE,
-	DOWNLOAD,
-	DONE,
-	SUBPROCESS,
-	PROGRESS,
+typedef enum { // 用于送回更新结果。严格禁止更改entries的次序，新值应放到尾部。
+	IDLE,			// 空闲
+	START,			// 启动
+	RUN,			// 运行
+	SUCCESS,		// 成功
+	FAILURE,		// 失败
+	DOWNLOAD,		// 下载
+	DONE,			// 完成
+	SUBPROCESS,		// 子进程
+	PROGRESS,		// 进度
 } RECOVERY_STATUS;
 
 typedef enum {
 	SOURCE_UNKNOWN,
-	SOURCE_WEBSERVER,
-	SOURCE_SURICATTA,
-	SOURCE_DOWNLOADER,
+	SOURCE_WEBSERVER, // webserver
+	SOURCE_SURICATTA, // suricatta
+	SOURCE_DOWNLOADER, // 下载器
 	SOURCE_LOCAL,
-	SOURCE_CHUNKS_DOWNLOADER
-} sourcetype;
+	SOURCE_CHUNKS_DOWNLOADER // chunks下载器
+} sourcetype;	// 子进程类型
 
 #ifdef __cplusplus
 }   // extern "C"
