@@ -104,9 +104,9 @@ static channel_data_t channel_data_defaults = {.debug = false,
 #endif
 					       .noipc = false,
 					       .headers = NULL,
-					       .format = CHANNEL_PARSE_NONE,
+					       .format = CHANNEL_PARSE_JSON, // kms-service遵循REST API
 					       .range = NULL,
-					       .nocheckanswer = true,
+					       .nocheckanswer = false, // kms-service还没有严格定义的HTTP状态码，我们需要根据消息回复来判断
 					       .nofollow = true,
 					       .strictssl = true};
 
@@ -437,6 +437,34 @@ static server_op_res_t map_http_retcode(channel_op_res_t response)
 	return SERVER_EERR;
 }
 
+static server_op_res_t kms_check_update(channel_t *this, channel_data_t *data) {
+	server_op_res_t result = SERVER_EERR;
+
+	if (this->get(this, data))
+		return result;
+
+    DEBUG("response json: %s", json_object_to_json_string_ext(data->json_reply, JSON_C_TO_STRING_PRETTY));
+
+	if (json_object_get_boolean(json_object_object_get(data->json_reply, "success"))) {
+		json_object *res_data = json_object_object_get(data->json_reply, "data");
+		const char* download_url = json_object_get_string(json_object_object_get(res_data, "downloadUrl"));
+		
+		channel_curl_t *channel_curl = this->priv;
+
+		if (channel_curl->redirect_url)
+			free(channel_curl->redirect_url);
+		channel_curl->redirect_url = strdup(download_url);
+
+		json_object_put(res_data);
+
+		result = SERVER_UPDATE_AVAILABLE;
+	} else {
+		result = SERVER_NO_UPDATE_AVAILABLE;
+	}
+
+	return result;
+}
+
 static server_op_res_t server_set_polling_interval(char *poll)
 {
 	unsigned long polling_interval = strtoul(poll, NULL, 10);
@@ -468,7 +496,8 @@ static server_op_res_t server_get_deployment_info(channel_t *channel, channel_da
 	LIST_INIT(&server_general.received_httpheaders);
 	channel_data->received_headers = &server_general.received_httpheaders;
 
-	result = map_http_retcode(channel->get(channel, (void *)channel_data));
+	// result = map_http_retcode(channel->get(channel, (void *)channel_data));
+	result = kms_check_update(channel, (void *)channel_data);
 
 	if (channel_data->url != NULL) {
 		free(channel_data->url);

@@ -7,6 +7,7 @@
 
 #pragma once
 #include "util.h"
+#include <curl/curl.h>
 #include <json-c/json.h>
 #include <stdio.h>
 #include <stdbool.h>
@@ -95,3 +96,11 @@ typedef struct {
 	char *range; /* Range request for get_file in any */
 	void *user;
 } channel_data_t;
+
+typedef struct {
+	char *proxy;
+	char *effective_url;
+	char *redirect_url;
+	CURL *handle;
+	struct curl_slist *header;
+} channel_curl_t;

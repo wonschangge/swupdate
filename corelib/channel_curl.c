@@ -40,14 +40,6 @@ typedef struct {
 } output_data_t;
 
 typedef struct {
-	char *proxy;
-	char *effective_url;
-	char *redirect_url;
-	CURL *handle;
-	struct curl_slist *header;
-} channel_curl_t;
-
-typedef struct {
 	channel_data_t *channel_data;
 	int output;
 	output_data_t *outdata;
