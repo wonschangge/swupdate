@@ -436,13 +436,13 @@ cleanup:
 }
 
 __attribute__((constructor))
-void rdiff_image_handler(void)
+void rdiff_image_handler(void) // rdiff镜像处理器
 {
 	register_handler("rdiff_image", apply_rdiff_patch, IMAGE_HANDLER, NULL);
 }
 
 __attribute__((constructor))
-void rdiff_file_handler(void)
+void rdiff_file_handler(void) // rdiff文件处理器
 {
 	register_handler("rdiff_file", apply_rdiff_patch, FILE_HANDLER, NULL);
 }

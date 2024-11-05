@@ -35,7 +35,7 @@
 #define HWID_REGEXP_PREFIX	"#RE:"
 #define SWUPDATE_ALIGN(A,S)    (((A) + (S) - 1) & ~((S) - 1))
 
-#define BOOTVAR_TRANSACTION "recovery_status" // recovery_status U-Boot环境变量
+#define BOOTVAR_TRANSACTION "recovery_status" // recovery_status SWUpdate升级指示环境变量
 
 struct img_type;
 struct imglist;

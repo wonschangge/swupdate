@@ -29,12 +29,12 @@ typedef enum { // 用于送回更新结果。严格禁止更改entries的次序�
 } RECOVERY_STATUS;
 
 typedef enum {
-	SOURCE_UNKNOWN,
-	SOURCE_WEBSERVER, // webserver
-	SOURCE_SURICATTA, // suricatta
-	SOURCE_DOWNLOADER, // 下载器
-	SOURCE_LOCAL,
-	SOURCE_CHUNKS_DOWNLOADER // chunks下载器
+	SOURCE_UNKNOWN,				// 未知	
+	SOURCE_WEBSERVER, 			// webserver
+	SOURCE_SURICATTA, 			// suricatta
+	SOURCE_DOWNLOADER, 			// 普通下载器
+	SOURCE_LOCAL,				// 本地
+	SOURCE_CHUNKS_DOWNLOADER 	// 块下载器
 } sourcetype;	// 子进程类型
 
 #ifdef __cplusplus

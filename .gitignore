@@ -68,6 +68,7 @@ include/config/
 include/generated/
 doc/build
 doc/statemachine.png
+doc/source/images/statemachine.png
 
 # stgit generated dirs
 patches-*

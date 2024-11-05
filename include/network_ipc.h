@@ -22,24 +22,24 @@ extern "C" {
  * headers are not exported.
  */
 
-#define IPC_MAGIC		0x14052001 // 内部IPC消息魔数
+#define IPC_MAGIC		0x14052001 // 统一的内部IPC消息魔数
 
 typedef enum {
-	REQ_INSTALL,
-	ACK,
-	NACK,
-	GET_STATUS,
-	POST_UPDATE,
-	SWUPDATE_SUBPROCESS,
-	SET_AES_KEY,
-	SET_UPDATE_STATE,	/* set bootloader ustate */
-	GET_UPDATE_STATE,
-	REQ_INSTALL_EXT,
-	SET_VERSIONS_RANGE,
-	NOTIFY_STREAM,
-	GET_HW_REVISION,
-	SET_SWUPDATE_VARS,
-	GET_SWUPDATE_VARS,
+	REQ_INSTALL,									// 请求安装
+	ACK,											// 确认
+	NACK,											// 未确认
+	GET_STATUS,										// 获取状态
+	POST_UPDATE,									// 投递更新
+	SWUPDATE_SUBPROCESS,							// 子进程
+	SET_AES_KEY,									// 设置AES密钥
+	SET_UPDATE_STATE,	/* set bootloader ustate */ // 设置更新状态
+	GET_UPDATE_STATE,								// 获取更新状态
+	REQ_INSTALL_EXT,								// 请求安装EXT
+	SET_VERSIONS_RANGE,								// 设置版本区间
+	NOTIFY_STREAM,									// 通知流
+	GET_HW_REVISION,								// 获取硬件修订
+	SET_SWUPDATE_VARS,								// 设置变量
+	GET_SWUPDATE_VARS,								// 获取变量
 } msgtype; // 消息类型
 
 /*
@@ -65,31 +65,31 @@ enum run_type {
  * Install structure to be filled before calling
  * ipc and async functions
  */
-struct swupdate_request {
-	unsigned int apiversion;
-	sourcetype source;
-	enum run_type dry_run;
-	size_t len;
-	char info[512];
-	char software_set[256];
-	char running_mode[256];
-	bool disable_store_swu;
+struct swupdate_request { // 自定义IPC的请求
+	unsigned int apiversion;	// api版本
+	sourcetype source;			// IPC
+	enum run_type dry_run;		// 运行类型
+	size_t len;					// 长度
+	char info[512];				// 信息
+	char software_set[256];		// 
+	char running_mode[256];		// 运行模式
+	bool disable_store_swu;		// 禁用存储
 };
 
-typedef union {
-	char msg[128];
+typedef union { // 联合类型
+	char msg[128]; // 类型1: 128字长消息
 	struct { 
 		int current;
 		int last_result;
 		int error;
 		char desc[2048];
-	} status;
+	} status;	   // 类型2: 状态
 	struct {
 		int status;
 		int error;
 		int level;
 		char msg[2048];
-	} notify;
+	} notify;	   // 类型3: 通知
 	struct {
 		struct swupdate_request req;
 		unsigned int len;    /* Len of data valid in buf */
@@ -97,7 +97,7 @@ typedef union {
 				      * Buffer that each source can fill
 				      * with additional information
 				      */
-	} instmsg;
+	} instmsg;	   // 类型4: UDS插入消息
 	struct {
 		sourcetype source; /* Who triggered the update */
 		int	cmd;	   /* Optional encoded command */
@@ -107,32 +107,32 @@ typedef union {
 				      * Buffer that each source can fill
 				      * with additional information
 				      */
-	} procmsg;
+	} procmsg;     // 类型5: 进程消息
 	struct {
 		char key_ascii[65]; /* Key size in ASCII (256 bit, 32 bytes bin) + termination */
 		char ivt_ascii[33]; /* Key size in ASCII (16 bytes bin) + termination */
-	} aeskeymsg;
+	} aeskeymsg;   // 类型6: AES密钥消息
 	struct {
 		char minimum_version[256];
 		char maximum_version[256];
 		char current_version[256];
-	} versions;
+	} versions;    // 类型7: 版本信息
 	struct {
 		char boardname[256];
 		char revision[256];
-	} revisions;
+	} revisions;   // 类型8: 修订版信息
 	struct {
 		char varnamespace[256];
 		char varname[256];
 		char varvalue[256];
-	} vars;
+	} vars;        // 类型9: 变量
 } msgdata;
 	
 typedef struct {
-	int magic;	/* magic number */
-	int type;
-	msgdata data;
-} ipc_message;
+	int magic;	/* magic number */	// 自定义IPC消息的魔数
+	int type;						// 自定义IPC消息的类型
+	msgdata data;					// 自定义IPC消息的数据
+} ipc_message; // 自定义的IPC消息
 
 char *get_ctrl_socket(void);
 int ipc_inst_start(void);

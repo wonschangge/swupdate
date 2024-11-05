@@ -226,7 +226,7 @@ int swupdate_set_version_range(const char *minversion,
 	return ipc_send_cmd(&msg);
 }
 
-void swupdate_prepare_req(struct swupdate_request *req) {
+void swupdate_prepare_req(struct swupdate_request *req) { // 初始化req
 	if (!req)
 		return;
 	memset(req, 0, sizeof(struct swupdate_request));

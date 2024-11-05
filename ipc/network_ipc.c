@@ -40,7 +40,7 @@ char *get_ctrl_socket(void) {
 	return SOCKET_CTRL_PATH;
 }
 
-static int prepare_ipc(void) { // 准备UDS IPC管道
+static int prepare_ipc(void) { // 准备并返回UDS IPC管道
 	int connfd;
 	struct sockaddr_un servaddr;
 
@@ -300,7 +300,7 @@ cleanup:
  * this is for compatibiity to not break external API
  * Use better the _ext() version
  */
-int ipc_inst_start(void)
+int ipc_inst_start(void) // 兼容性设计，可不破坏api调用
 {
 	return ipc_inst_start_ext(NULL, 0);
 }
